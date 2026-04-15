@@ -23,6 +23,7 @@ import com.cocoding.playstate.util.ReflectionTagsJson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -188,9 +189,17 @@ public class DemoDataSeedService {
         if (normalizedEmail != null) {
             account.setEmail(normalizedEmail);
         }
-        userAccountRepository.save(account);
-        logger.info("Created demo user '{}'.", username);
-        return true;
+        try {
+            userAccountRepository.save(account);
+            logger.info("Created demo user '{}'.", username);
+            return true;
+        } catch (DataIntegrityViolationException e) {
+            // Another startup thread/instance may have created the same username/email first.
+            logger.warn(
+                    "Demo user '{}' not created because username/email already exists.",
+                    username);
+            return userAccountRepository.existsByUsernameIgnoreCase(username);
+        }
     }
 
     private boolean alreadySeeded(String userId) {
