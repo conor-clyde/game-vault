@@ -31,22 +31,24 @@ public class IgdbTokenService {
     private long tokenExpiryTimeEpochMs;
 
     public String getClientId() {
-        return clientId;
+        return normalizedCredential(clientId);
     }
 
     
     public synchronized String getAccessToken() {
+        String normalizedClientId = normalizedCredential(clientId);
+        String normalizedClientSecret = normalizedCredential(clientSecret);
         if (accessToken != null && System.currentTimeMillis() < tokenExpiryTimeEpochMs) {
             return accessToken;
         }
-        if (clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank()) {
+        if (normalizedClientId.isBlank() || normalizedClientSecret.isBlank()) {
             throw new RuntimeException(
                     "IGDB credentials are missing. Set IGDB_CLIENT_ID and IGDB_CLIENT_SECRET (or TWITCH_* variants).");
         }
 
         String requestBody =
-                "client_id=" + urlEncode(clientId)
-                        + "&client_secret=" + urlEncode(clientSecret)
+                "client_id=" + urlEncode(normalizedClientId)
+                        + "&client_secret=" + urlEncode(normalizedClientSecret)
                         + "&grant_type=" + urlEncode("client_credentials");
 
         HttpHeaders headers = new HttpHeaders();
@@ -94,5 +96,9 @@ public class IgdbTokenService {
 
     private static String urlEncode(String value) {
         return URLEncoder.encode(value != null ? value : "", StandardCharsets.UTF_8);
+    }
+
+    private static String normalizedCredential(String value) {
+        return value == null ? "" : value.trim();
     }
 }

@@ -2,10 +2,13 @@ package com.cocoding.playstate.config;
 
 import com.cocoding.playstate.model.UserAccount;
 import com.cocoding.playstate.repository.UserAccountRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,8 @@ import java.util.Locale;
 @Component
 @Order(1)
 public class DevUserAccountSeed implements ApplicationRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(DevUserAccountSeed.class);
 
     private final UserAccountRepository userAccountRepository;
 
@@ -55,6 +60,13 @@ public class DevUserAccountSeed implements ApplicationRunner {
         if (normalizedEmail != null) {
             account.setEmail(normalizedEmail);
         }
-        userAccountRepository.save(account);
+        try {
+            userAccountRepository.save(account);
+        } catch (DataIntegrityViolationException e) {
+            // Startup can race with another account create flow; skip if uniqueness is already satisfied.
+            logger.warn(
+                    "Dev seed user '{}' not created because username/email already exists.",
+                    username);
+        }
     }
 }
