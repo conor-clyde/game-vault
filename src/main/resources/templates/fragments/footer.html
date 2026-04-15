@@ -6,13 +6,13 @@
         <div class="site-footer-row">
             <div th:replace="~{fragments/site-logo :: footerMark}"></div>
             <p class="site-footer-copy">
-                &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> GameVault. All rights reserved.
+                &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2026</span> GameVaultr. All rights reserved.
             </p>
         </div>
         <p class="site-footer-attribution">
             Game information is provided by
             <a href="https://www.igdb.com" target="_blank" rel="noopener noreferrer">IGDB</a>.
-            GameVault is not affiliated with IGDB or Twitch.
+            GameVaultr is not affiliated with IGDB or Twitch.
         </p>
     </div>
     <th:block th:if="${navAuthenticated}">
