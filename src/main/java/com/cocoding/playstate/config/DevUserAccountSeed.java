@@ -42,11 +42,18 @@ public class DevUserAccountSeed implements ApplicationRunner {
         if (userAccountRepository.existsByUsernameIgnoreCase(username)) {
             return;
         }
+        String normalizedEmail = null;
+        if (seedEmail != null && !seedEmail.isBlank()) {
+            normalizedEmail = seedEmail.trim().toLowerCase(Locale.ROOT);
+            if (userAccountRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+                return;
+            }
+        }
         UserAccount account = new UserAccount();
         account.setUsername(username);
         account.setPasswordHash(passwordEncoder.encode(seedPassword));
-        if (seedEmail != null && !seedEmail.isBlank()) {
-            account.setEmail(seedEmail.trim().toLowerCase(Locale.ROOT));
+        if (normalizedEmail != null) {
+            account.setEmail(normalizedEmail);
         }
         userAccountRepository.save(account);
     }

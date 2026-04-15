@@ -106,7 +106,9 @@ public class DemoDataSeedService {
             return;
         }
         String username = demoUsername.trim().toLowerCase(Locale.ROOT);
-        ensureDemoUserAccount(username);
+        if (!ensureDemoUserAccount(username)) {
+            return;
+        }
         if (alreadySeeded(username)) {
             logger.debug("Demo collection already present; skipping seed.");
             return;
@@ -165,18 +167,30 @@ public class DemoDataSeedService {
         logger.info("Demo library seeded for user '{}'.", username);
     }
 
-    private void ensureDemoUserAccount(String username) {
+    private boolean ensureDemoUserAccount(String username) {
         if (userAccountRepository.existsByUsernameIgnoreCase(username)) {
-            return;
+            return true;
+        }
+        String normalizedEmail = null;
+        if (demoEmail != null && !demoEmail.isBlank()) {
+            normalizedEmail = demoEmail.trim().toLowerCase(Locale.ROOT);
+            if (userAccountRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+                logger.warn(
+                        "Demo user '{}' not created because email '{}' already exists.",
+                        username,
+                        normalizedEmail);
+                return false;
+            }
         }
         UserAccount account = new UserAccount();
         account.setUsername(username);
         account.setPasswordHash(passwordEncoder.encode(demoPassword));
-        if (demoEmail != null && !demoEmail.isBlank()) {
-            account.setEmail(demoEmail.trim().toLowerCase(Locale.ROOT));
+        if (normalizedEmail != null) {
+            account.setEmail(normalizedEmail);
         }
         userAccountRepository.save(account);
         logger.info("Created demo user '{}'.", username);
+        return true;
     }
 
     private boolean alreadySeeded(String userId) {

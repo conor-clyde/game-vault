@@ -105,7 +105,7 @@ public class SearchService {
             return searchPage(query, filters, sort, offset, libraryUserId);
         } catch (IgdbException e) {
             logger.error("Search failed (IGDB): query=\"{}\"", query, e);
-            return new SearchResult(Collections.emptyList(), false, IgdbException.MESSAGE);
+            return new SearchResult(Collections.emptyList(), false, IgdbException.userMessage(e));
         }
     }
 
