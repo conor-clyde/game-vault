@@ -476,6 +476,29 @@
       }
     }
 
+    (function wireHeroPlatformChipAlignment() {
+      var chip = document.querySelector(".cg-hero-meta-chip--platform");
+      if (!chip) {
+        return;
+      }
+
+      function syncAlignment() {
+        chip.classList.remove("cg-hero-meta-chip--platform-left");
+        var cs = window.getComputedStyle(chip);
+        var lineHeight = parseFloat(cs.lineHeight);
+        if (!isFinite(lineHeight) || lineHeight <= 0) {
+          lineHeight = 18;
+        }
+        var wrapped = chip.scrollHeight > lineHeight * 1.6;
+        if (wrapped) {
+          chip.classList.add("cg-hero-meta-chip--platform-left");
+        }
+      }
+
+      syncAlignment();
+      window.addEventListener("resize", syncAlignment);
+    })();
+
     function wireClampedTextToggle(bodyEl, toggleEl) {
       if (!bodyEl || !toggleEl) {
         return;

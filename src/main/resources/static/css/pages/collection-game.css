@@ -7203,14 +7203,18 @@ details.cg-pt-accordion[open] .cgpd-card__pct-bar .cgpt-read-pct-fill {
   border-radius: 0.95rem;
   display: inline-flex;
   flex: 0 1 auto;
-  justify-content: flex-start;
+  justify-content: center;
   max-width: 100%;
   min-width: 0;
-  text-align: left;
+  text-align: center;
   width: auto;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+.cg-hero-meta-chip--platform.cg-hero-meta-chip--platform-left {
+  justify-content: flex-start;
+  text-align: left;
 }
 .cg-hero-cta-column {
   align-items: flex-start;
