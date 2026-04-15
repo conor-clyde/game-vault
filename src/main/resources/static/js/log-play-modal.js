@@ -148,6 +148,32 @@
     return fromBtn;
   }
 
+  function parseSessionStartEpochMsFromAttrs(el, epochAttrName, isoAttrName) {
+    if (!el || !el.getAttribute) {
+      return null;
+    }
+    var isoRaw = String(el.getAttribute(isoAttrName || "") || "").trim();
+    if (isoRaw !== "") {
+      var isoNormalized = isoRaw.replace(" ", "T");
+      var isoMs = new Date(isoNormalized).getTime();
+      if (isFinite(isoMs) && isoMs > 0) {
+        return isoMs;
+      }
+    }
+    var epochRaw = String(el.getAttribute(epochAttrName || "") || "").trim();
+    if (epochRaw === "" || isNaN(Number(epochRaw))) {
+      return null;
+    }
+    var epoch = Number(epochRaw);
+    if (!isFinite(epoch) || epoch <= 0) {
+      return null;
+    }
+    if (epoch < 1e12) {
+      epoch *= 1000;
+    }
+    return isFinite(epoch) && epoch > 0 ? epoch : null;
+  }
+
   function setPlaythroughDropdownPanelHidden(hidden) {
     var panel = $("logPlayPlaythroughPanel");
     var trigger = $("logPlayPlaythroughTrigger");
@@ -1924,17 +1950,11 @@
           openFromButtonFallback(apiId, title);
           return;
         }
-        var startEpochRaw =
-          openerBtn && openerBtn.getAttribute
-            ? String(
-                openerBtn.getAttribute("data-open-session-start-epoch-ms") ||
-                  "",
-              ).trim()
-            : "";
-        var startEpoch =
-          startEpochRaw !== "" && !isNaN(Number(startEpochRaw))
-            ? Number(startEpochRaw)
-            : null;
+        var startEpoch = parseSessionStartEpochMsFromAttrs(
+          openerBtn,
+          "data-open-session-start-epoch-ms",
+          "data-open-session-start-iso",
+        );
         if (
           startEpoch != null &&
           isFinite(startEpoch) &&
@@ -2029,13 +2049,11 @@
 
     if (!apiId) return;
     if (openSessionId != null) {
-      var startGateRaw = String(
-        btn.getAttribute("data-open-session-start-epoch-ms") || "",
-      ).trim();
-      var startGateMs =
-        startGateRaw !== "" && !isNaN(Number(startGateRaw))
-          ? Number(startGateRaw)
-          : null;
+      var startGateMs = parseSessionStartEpochMsFromAttrs(
+        btn,
+        "data-open-session-start-epoch-ms",
+        "data-open-session-start-iso",
+      );
       if (
         startGateMs != null &&
         isFinite(startGateMs) &&
@@ -2321,14 +2339,16 @@
     var btn = $("colGameLogPlayBtn");
     var timerEl = $("colGameLogPlayBtnTimer");
     if (!btn || !timerEl) return;
-    var raw = String(
-      btn.getAttribute("data-open-session-start-epoch-ms") || "",
-    ).trim();
+    var startMs = parseSessionStartEpochMsFromAttrs(
+      btn,
+      "data-open-session-start-epoch-ms",
+      "data-open-session-start-iso",
+    );
     var openId = String(
       btn.getAttribute("data-log-open-session-id") || "",
     ).trim();
     var gateEndPlay = openId !== "";
-    if (raw === "" || isNaN(Number(raw))) {
+    if (startMs == null) {
       timerEl.textContent = "";
       if (gateEndPlay) {
         btn.disabled = true;
@@ -2336,7 +2356,6 @@
       }
       return;
     }
-    var startMs = Number(raw);
     var elapsedMs = Date.now() - startMs;
     if (!isFinite(elapsedMs) || elapsedMs < 0) {
       timerEl.textContent = "";
@@ -2422,6 +2441,9 @@
       getAttribute: function (name) {
         if (name === "data-open-session-start-epoch-ms") {
           return String(root.getAttribute("data-start-ms") || "");
+        }
+        if (name === "data-open-session-start-iso") {
+          return String(root.getAttribute("data-start-iso") || "");
         }
         return "";
       },

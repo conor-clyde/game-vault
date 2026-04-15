@@ -64,8 +64,29 @@
     return;
   }
 
-  const raw = String(sessionRoot.getAttribute("data-start-ms") || "").trim();
-  const startMs = raw !== "" && !isNaN(Number(raw)) ? Number(raw) : NaN;
+  function parseStartMs(root) {
+    const isoRaw = String(root.getAttribute("data-start-iso") || "").trim();
+    if (isoRaw !== "") {
+      const isoMs = new Date(isoRaw.replace(" ", "T")).getTime();
+      if (isFinite(isoMs) && isoMs > 0) {
+        return isoMs;
+      }
+    }
+    const raw = String(root.getAttribute("data-start-ms") || "").trim();
+    if (raw === "" || isNaN(Number(raw))) {
+      return NaN;
+    }
+    let ms = Number(raw);
+    if (!isFinite(ms) || ms <= 0) {
+      return NaN;
+    }
+    if (ms < 1e12) {
+      ms *= 1000;
+    }
+    return ms;
+  }
+
+  const startMs = parseStartMs(sessionRoot);
   if (!isFinite(startMs) || startMs <= 0) {
     return;
   }

@@ -3448,7 +3448,9 @@
               }
             });
           var summaryEl = det.querySelector(".cg-pt-accordion__summary");
-          if (summaryEl) {
+          var shouldScrollToSummary =
+            summaryEl && document.activeElement === summaryEl;
+          if (shouldScrollToSummary) {
             window.requestAnimationFrame(function () {
               window.requestAnimationFrame(function () {
                 try {
