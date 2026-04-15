@@ -1,7 +1,6 @@
 HELP.md
 data/
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -32,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### OS / logs / env ###
+.DS_Store
+*.log
+*.tmp
+.env
+.env.*
+!.env.example
