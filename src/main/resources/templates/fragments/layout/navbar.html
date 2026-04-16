@@ -146,24 +146,18 @@
           </div>
         </div>
         <hr class="navbar-mobile-rule" aria-hidden="true" />
-        <nav class="navbar-mobile-nav" aria-label="Library">
+        <nav class="navbar-mobile-nav" aria-label="Collection and search">
           <a
             href="/collection"
             class="navbar-mobile-link"
             th:classappend="${title == 'My collection' || title == 'Collection' ? 'active' : ''}"
-            >Library</a
+            >Collection</a
           >
           <a
             href="/search"
             class="navbar-mobile-link"
             th:classappend="${title == 'Search' ? 'active' : ''}"
             >Search</a
-          >
-          <a
-            th:href="@{|/#hd-activity-heading|}"
-            class="navbar-mobile-link"
-            th:classappend="${title == 'Home' ? 'active' : ''}"
-            >Sessions</a
           >
         </nav>
         <div
