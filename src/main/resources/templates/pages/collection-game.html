@@ -169,10 +169,7 @@
                 >
                   <span
                     class="cg-hero-meta-chip cg-hero-meta-chip--status"
-                    th:classappend="${userGame.status == T(com.cocoding.playstate.domain.enums.GameStatus).PLAYING} ? ' cg-hero-meta-chip--status-playing' :
-                                    (${userGame.status == T(com.cocoding.playstate.domain.enums.GameStatus).PAUSED} ? ' cg-hero-meta-chip--status-paused' :
-                                    (${userGame.status == T(com.cocoding.playstate.domain.enums.GameStatus).FINISHED} ? ' cg-hero-meta-chip--status-finished' :
-                                    (${userGame.status == T(com.cocoding.playstate.domain.enums.GameStatus).DROPPED} ? ' cg-hero-meta-chip--status-dropped' : ' cg-hero-meta-chip--status-backlog')))"
+                    th:classappend="${userGame.status != null and userGame.status.name() == 'PLAYING'} ? ' cg-hero-meta-chip--status-playing' : (${userGame.status != null and userGame.status.name() == 'PAUSED'} ? ' cg-hero-meta-chip--status-paused' : (${userGame.status != null and userGame.status.name() == 'FINISHED'} ? ' cg-hero-meta-chip--status-finished' : (${userGame.status != null and userGame.status.name() == 'DROPPED'} ? ' cg-hero-meta-chip--status-dropped' : ' cg-hero-meta-chip--status-backlog')))"
                     th:text="${userGame.status != null ? userGame.status.displayName : 'Backlog'}"
                     >Playing</span
                   >
