@@ -1,6 +1,7 @@
 package com.cocoding.playstate.security;
 
 import com.cocoding.playstate.repository.UserAccountRepository;
+import java.util.Locale;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,16 +19,21 @@ public class DatabaseUserDetailsService implements UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    String login = username == null ? "" : username.trim();
     return userAccountRepository
-        .findByEmailIgnoreCase(login)
-        .or(() -> userAccountRepository.findByUsernameIgnoreCase(login))
+        .findByUsernameIgnoreCase(username.trim())
         .map(
-            account ->
-                User.withUsername(account.getEmail() != null ? account.getEmail() : account.getUsername())
-                    .password(account.getPasswordHash())
-                    .roles("USER")
-                    .build())
+            account -> {
+              String principal = normalizedLibraryPrincipal(account.getEmail(), account.getUsername());
+              return User.withUsername(principal)
+                  .password(account.getPasswordHash())
+                  .roles("USER")
+                  .build();
+            })
         .orElseThrow(() -> new UsernameNotFoundException("Unknown user"));
+  }
+
+  private static String normalizedLibraryPrincipal(String email, String username) {
+    String candidate = email != null && !email.isBlank() ? email : username;
+    return candidate == null ? "" : candidate.trim().toLowerCase(Locale.ROOT);
   }
 }

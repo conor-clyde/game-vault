@@ -6,6 +6,7 @@ import com.cocoding.playstate.model.UserGame;
 import com.cocoding.playstate.domain.enums.WhyPlaying;
 import com.cocoding.playstate.repository.GameRepository;
 import com.cocoding.playstate.repository.PlayLogRepository;
+import com.cocoding.playstate.repository.UserAccountRepository;
 import com.cocoding.playstate.repository.UserGameRepository;
 import com.cocoding.playstate.security.LibraryUserIds;
 import java.time.LocalDateTime;
@@ -27,14 +28,17 @@ public class GlobalNavModelAdvice {
   private final PlayLogRepository playLogRepository;
   private final GameRepository gameRepository;
   private final UserGameRepository userGameRepository;
+  private final UserAccountRepository userAccountRepository;
 
   public GlobalNavModelAdvice(
       PlayLogRepository playLogRepository,
       GameRepository gameRepository,
-      UserGameRepository userGameRepository) {
+      UserGameRepository userGameRepository,
+      UserAccountRepository userAccountRepository) {
     this.playLogRepository = playLogRepository;
     this.gameRepository = gameRepository;
     this.userGameRepository = userGameRepository;
+    this.userAccountRepository = userAccountRepository;
   }
 
   @ModelAttribute
@@ -45,7 +49,7 @@ public class GlobalNavModelAdvice {
             && !(authentication instanceof AnonymousAuthenticationToken);
     model.addAttribute("navAuthenticated", authed);
     if (authed && authentication != null) {
-      model.addAttribute("navUsername", authentication.getName());
+      model.addAttribute("navUsername", resolveNavUsername(authentication.getName()));
       model.addAttribute("whyPlayings", Arrays.asList(WhyPlaying.values()));
       model.addAttribute("logPlayModalPageHasPlayLogs", false);
       model.addAttribute("logPlayModalPageLastPlayedRel", null);
@@ -53,6 +57,17 @@ public class GlobalNavModelAdvice {
       model.addAttribute("logPlayModalPageLastPlayedCalendar", null);
       model.addAttribute("logPlayModalPageTotalPlayLabel", null);
     }
+  }
+
+  private String resolveNavUsername(String authenticationName) {
+    if (authenticationName == null || authenticationName.isBlank()) {
+      return authenticationName;
+    }
+    return userAccountRepository
+        .findByUsernameIgnoreCase(authenticationName.trim())
+        .or(() -> userAccountRepository.findByEmailIgnoreCase(authenticationName.trim()))
+        .map(a -> a.getUsername() != null && !a.getUsername().isBlank() ? a.getUsername() : authenticationName)
+        .orElse(authenticationName);
   }
 
   @ModelAttribute
