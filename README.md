@@ -1,13 +1,11 @@
 # Gamevaultr
-
-A video game tracking app to organize your collection, decide what to play, track playthroughs, and journal your play history.
-
-
+![Logo](docs/media/gvlogo.png)
+A game tracking app to organize your collection, decide what to play, track playthroughs, and reflection on your gaming experience.
 
 ---
 
 
-## 🔗 Live Demo
+## 🔗 Live Website
 https://gamevaultr.com
 
 ### Demo Access
@@ -57,6 +55,8 @@ Find games through IGDB and add them to your collection in a few clicks.
 ```
 Track ownership and status to keep your library organized.
 
+
+
 #### Playthrough and Session Logging
 
 ```md
@@ -85,82 +85,106 @@ Host a longer video on YouTube/Loom and link it:
 [Watch full walkthrough](https://your-video-link-here)
 ```
 
-
 ## Tech Stack
 
-- Java 21
-- Spring Boot 4
-- Spring MVC + Thymeleaf
-- Spring Security
-- Spring Data JPA
-- H2 (local profile) and PostgreSQL (default profile)
-- Maven Wrapper (`./mvnw`)
+- Backend framework: Spring Boot 4
+- Language: Java 21
+- Build tool: Maven (`mvn` / `./mvnw`)
+- Data layer: Spring Data JPA + Hibernate
+- Database: PostgreSQL (default), H2 (local profile)
+- Security: Spring Security
+- View layer: Thymeleaf + static assets
+- External API: IGDB (via Twitch credentials)
+- Caching: Caffeine
 
+## Getting Started / Installation
 
+### Prerequisites
 
-## Prerequisites
+- Java 21 installed
+- Maven installed (or use the included Maven wrapper: `./mvnw`)
+- Git
 
-- JDK 21 installed
-- No global Maven install required (wrapper included)
+### Clone the repo
 
-## Running Locally
+```bash
+git clone https://github.com/<your-username>/playstate.git
+cd playstate
+```
 
-1. Start the app with the local profile:
+### Install dependencies
+
+```bash
+./mvnw clean install
+```
+
+### Environment variables
+
+For local development with the `local` profile, defaults are provided in `application-local.properties`.
+
+For non-local runs, set these environment variables:
+
+- `DATABASE_URL`
+- `DB_USERNAME` (if needed)
+- `DB_PASSWORD` (if needed)
+- `IGDB_CLIENT_ID` (or `TWITCH_CLIENT_ID`)
+- `IGDB_CLIENT_SECRET` (or `TWITCH_CLIENT_SECRET`)
+- `SECURITY_USER_NAME` (optional)
+- `SECURITY_USER_PASSWORD` (optional)
+- `DEMO_ENABLED` (optional)
+- `DEMO_USERNAME` / `DEMO_PASSWORD` (optional)
+
+Example shell setup:
+
+```bash
+export DATABASE_URL=jdbc:postgresql://localhost:5432/playstate
+export DB_USERNAME=postgres
+export DB_PASSWORD=postgres
+export IGDB_CLIENT_ID=your_client_id
+export IGDB_CLIENT_SECRET=your_client_secret
+```
+
+### Run the app
+
+Local profile (H2 + local defaults):
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-2. Open:
-
-- App: [http://localhost:8080](http://localhost:8080)
-- H2 console: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
-
-The local profile uses file-backed H2 at `./data/playstate-local`.
-
-## Local Default Credentials
-
-From `application-local.properties`:
-
-- User: `local-admin`
-- Password: `local-admin`
-- Demo user: `demo` / `demo`
-
-## Environment Variables (Default Profile)
-
-The default profile expects PostgreSQL and optional IGDB/demo config:
-
-- `DATABASE_URL`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `SPRING_JPA_HIBERNATE_DDL_AUTO` (defaults to `validate`)
-- `PORT` (defaults to `8080`)
-- `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` (or Twitch equivalents)
-- `SECURITY_USER_NAME`
-- `SECURITY_USER_PASSWORD`
-- `DEMO_ENABLED`
-- `DEMO_USERNAME`
-- `DEMO_PASSWORD`
-
-## Build and Test
+Default profile (expects env vars):
 
 ```bash
-./mvnw clean test
-./mvnw clean package
+./mvnw spring-boot:run
 ```
 
-## Main Routes
-
-- `/` - home
-- `/login` and `/register` - authentication
-- `/search` - game search and add flow
-- `/collection` - collection list
-- `/collection/{apiId}` - collection game detail and play log/playthrough actions
+App URL: [http://localhost:8080](http://localhost:8080)
 
 ## Project Structure
 
-- `src/main/java` - Spring Boot Java source
-- `src/main/resources/templates` - Thymeleaf templates
-- `src/main/resources/static` - CSS/JS assets
-- `src/main/resources/application.properties` - default/prod-style config
+Quick overview of the main folders:
 
+```text
+playstate/
+├─ src/
+│  ├─ main/
+│  │  ├─ java/com/cocoding/playstate/
+│  │  │  ├─ controller/     # MVC controllers and request handling
+│  │  │  ├─ service/        # business logic and integrations
+│  │  │  ├─ security/       # authentication and security config
+│  │  │  ├─ domain/         # entities, enums, and core models
+│  │  │  └─ ...             # repositories, config, and app bootstrap
+│  │  └─ resources/
+│  │     ├─ templates/      # Thymeleaf templates
+│  │     ├─ static/         # CSS/JS/images
+│  │     └─ application*.properties
+│  └─ test/                 # unit/integration tests
+├─ pom.xml                  # Maven build and dependencies
+└─ README.md
+```
+
+## License
+
+This project is currently unlicensed.
+
+If you plan to make it public, consider adding an MIT license by creating a `LICENSE` file and updating this section.
