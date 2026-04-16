@@ -9,8 +9,10 @@
 main.auth-main {
   background-color: #000;
   box-sizing: border-box;
+  flex: 1 1 auto;
   margin: 0;
   max-width: none;
+  min-height: 0;
   /* Override global `main` padding from layout.css */
   padding: 0;
   width: 100%;
@@ -22,14 +24,17 @@ main.auth-main {
   flex: 1 1 auto;
   flex-direction: column;
   isolation: isolate;
+  /* Center the card; safe center avoids clipping when the form is taller than the viewport */
   justify-content: center;
+  justify-content: safe center;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: max(clamp(1.75rem, 6vmin, 3.25rem), env(safe-area-inset-top, 0))
+  /* Symmetric vertical padding so centered forms never sit flush under the nav */
+  padding: max(clamp(1.5rem, 5vmin, 2.75rem), env(safe-area-inset-top, 0))
     max(20px, env(safe-area-inset-right, 0))
-    max(clamp(1.25rem, 4vmin, 2.75rem), env(safe-area-inset-bottom, 0))
+    max(clamp(1.5rem, 5vmin, 2.75rem), env(safe-area-inset-bottom, 0))
     max(20px, env(safe-area-inset-left, 0));
   position: relative;
 }
@@ -186,12 +191,6 @@ main.auth-main {
   color: var(--accent-2);
   text-decoration: underline;
 }
-/* Short viewports: avoid vertical centering clipping the card against #000 */
-@media (max-width: 900px), (max-height: 820px) {
-  .auth-main {
-    justify-content: flex-start;
-  }
-}
 .auth-page .site-footer {
   margin-top: 0.75rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0));
@@ -213,9 +212,11 @@ main.auth-main {
     padding: 8px 16px;
   }
   .auth-main {
-    /* Extra top padding so #000 shows clearly above the card */
-    padding: max(clamp(1.1rem, 5vmin, 2rem), calc(0.5rem + env(safe-area-inset-top, 0)))
-      max(14px, env(safe-area-inset-right, 0)) max(0.5rem, env(safe-area-inset-bottom, 0))
+    justify-content: center;
+    justify-content: safe center;
+    padding: max(clamp(1.25rem, 5vmin, 2rem), env(safe-area-inset-top, 0))
+      max(14px, env(safe-area-inset-right, 0))
+      max(clamp(1.25rem, 5vmin, 2rem), env(safe-area-inset-bottom, 0))
       max(14px, env(safe-area-inset-left, 0));
   }
   .auth-panel {
@@ -278,7 +279,8 @@ main.auth-main {
 }
 @media (max-width: 720px) and (max-height: 740px) {
   .auth-main {
-    padding-top: max(0.75rem, calc(0.35rem + env(safe-area-inset-top, 0)));
+    padding: max(0.85rem, env(safe-area-inset-top, 0)) max(12px, env(safe-area-inset-right, 0))
+      max(0.85rem, env(safe-area-inset-bottom, 0)) max(12px, env(safe-area-inset-left, 0));
   }
   .auth-panel {
     padding: 0.72rem 0.72rem 0.65rem;
