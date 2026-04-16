@@ -7,10 +7,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GameEnrichmentService {
+  private static final Logger logger = LoggerFactory.getLogger(GameEnrichmentService.class);
   private static final int IGDB_RETRY_COOLDOWN_MINUTES = 10;
 
   private final GameRepository gameRepository;
@@ -83,6 +86,11 @@ public class GameEnrichmentService {
         gameRepository.save(game);
       }
     } catch (NumberFormatException ignored) {
+    } catch (RuntimeException e) {
+      logger.warn(
+          "Skipping metadata enrichment for game apiId={} due to IGDB error: {}",
+          game != null ? game.getApiId() : null,
+          rootMessage(e));
     }
   }
 
@@ -90,16 +98,23 @@ public class GameEnrichmentService {
     if (game == null) {
       return;
     }
-    List<String> options = igdbService.getPlatformOptionsForGame(game.getApiId(), fallbackPlatform);
-    if (options == null || options.isEmpty()) {
-      return;
+    try {
+      List<String> options = igdbService.getPlatformOptionsForGame(game.getApiId(), fallbackPlatform);
+      if (options == null || options.isEmpty()) {
+        return;
+      }
+      List<String> existing = game.getPlatformOptionsList();
+      if (existing.equals(options)) {
+        return;
+      }
+      game.setPlatformOptionsList(options);
+      gameRepository.save(game);
+    } catch (RuntimeException e) {
+      logger.warn(
+          "Skipping platform refresh for game apiId={} due to IGDB error: {}",
+          game.getApiId(),
+          rootMessage(e));
     }
-    List<String> existing = game.getPlatformOptionsList();
-    if (existing.equals(options)) {
-      return;
-    }
-    game.setPlatformOptionsList(options);
-    gameRepository.save(game);
   }
 
   public void refreshPlatformOptionsFromIgdbIfMissing(Game game, String fallbackPlatform) {
@@ -150,5 +165,13 @@ public class GameEnrichmentService {
       return true;
     }
     return lastAttemptAt.plusMinutes(IGDB_RETRY_COOLDOWN_MINUTES).isBefore(LocalDateTime.now());
+  }
+
+  private static String rootMessage(Throwable error) {
+    Throwable current = error;
+    while (current.getCause() != null) {
+      current = current.getCause();
+    }
+    return current.getMessage() != null ? current.getMessage() : current.toString();
   }
 }
