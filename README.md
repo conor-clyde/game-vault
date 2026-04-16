@@ -25,19 +25,6 @@ You can explore the app using demo credentials:
 
 ## Product Demo Media
 
-### 1) Hero Demo (10-20s)
-
-Show the end-to-end core flow in one short GIF or clip:
-
-- Sign in
-- Search for a game
-- Add it to collection
-- Update play status/progress
-
-```md
-![Hero Demo](docs/media/hero-demo.gif)
-```
-
 ### 2) Key Feature Walkthroughs
 
 #### Add games to your collection
