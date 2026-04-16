@@ -40,9 +40,9 @@ Password: demopassword
 
 
 ## Session logging - record each play session
-![Log play sessions](docs/media/log.png)
+![Log play sessions](docs/media/log-play.png)
 
-![Log play history](docs/media/log-history.png)
+![Log play history](docs/media/log-play-history.png)
 
 ## Session Timer — track your playtime in real time
 ![Timer](docs/media/timer.png)
