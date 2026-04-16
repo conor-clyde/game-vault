@@ -48,6 +48,9 @@ public class Game {
   @Column(name = "igdb_last_attempt_at")
   private LocalDateTime igdbLastAttemptAt;
 
+  @Column(name = "last_updated", nullable = false)
+  private LocalDateTime lastUpdated;
+
   public Game() {}
 
   public Game(String apiId, String title, String imageUrl) {
@@ -174,5 +177,19 @@ public class Game {
 
   public void setIgdbLastAttemptAt(LocalDateTime igdbLastAttemptAt) {
     this.igdbLastAttemptAt = igdbLastAttemptAt;
+  }
+
+  public LocalDateTime getLastUpdated() {
+    return lastUpdated;
+  }
+
+  public void setLastUpdated(LocalDateTime lastUpdated) {
+    this.lastUpdated = lastUpdated;
+  }
+
+  @PrePersist
+  @PreUpdate
+  protected void touchLastUpdated() {
+    lastUpdated = LocalDateTime.now();
   }
 }
