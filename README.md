@@ -1,65 +1,85 @@
 # Gamevaultr
 
-![Logo](docs/media/0gvlogo.png)
+![Gamevaultr logo](docs/media/0gvlogo.png)
 
-Gamevaultr is a personal game vault: build your game collection, then track playthroughs, sessions, ratings, and notes in one place.
+![Gamevaultr wordmark on dark](docs/media/gvlogo.png)
 
-## Live Website - Fully useable
+**Gamevaultr** is a personal game vault: build your collection, then track playthroughs, sessions, ratings, and notes in one place.
 
-[gamevaultr.com](https://gamevaultr.com)
+## Live app
 
-### Use the credentials below to explore the application
-Username: demo<br>
+The site is fully usable at **[gamevaultr.com](https://gamevaultr.com)**.
+
+Demo login:
+
+```
+Username: demo
 Password: demopassword
+```
 
-## What You Can Do
+## What you can do
 
-- Search add games to your collection
-- Track ownership, play status, and progress for each game
-- Manage playthroughs history and current run context
-- Log individual play sessions with notes and reflections
-- Record ratings, reviews, notes and personal insights
-- Track playtime with a built-in session timer
+- Search IGDB and add games to your collection
+- Track ownership, play status, and per-game progress
+- Manage playthrough history and your current run
+- Log play sessions with notes and reflections
+- Record ratings, reviews, and personal notes
+- Measure playtime with a built-in session timer
 
-## Product Preview
-### Home - your collection at a glance
+---
 
-![Home Screen](docs/media/Home.png)
+## Product preview
 
-### Search and Add - build your library quickly 
+### Home — your collection at a glance
 
-![Search and Add](docs/media/search-add.gif)
+![Home](docs/media/Home.png)
 
-## Collection - organize and manage your games
+![Home — alternate view](docs/media/HomeScreenshot.png)
 
-![Collection organization](docs/media/collection.gif)
+### Search and add — build your library quickly
 
-## Game tracking — pick up exactly where you left off
+![Search and add](docs/media/search-add.gif)
+
+### Collection — organize and manage your games
+
+![Collection](docs/media/collection.gif)
+
+### Game page — pick up where you left off
+
 ![Game page](docs/media/game.png)
 
-## Intentions - Define how you want to paly
-![Game page](docs/media/intentions.png)
+### Intentions — define how you want to play
 
-## Session logging - record each play session
-![Log play sessions](docs/media/log-play.png)
+![Intentions](docs/media/intentions.png)
 
-![Log play history](docs/media/play-history.png)
+### Session logging — record each play session
 
-## Session Timer — track your playtime in real time
-![Timer](docs/media/timer.png)
+![Log a play session](docs/media/log-play.png)
 
-## Review and reflect - Capture your experience
-![Timer](docs/media/reflect.png)
+![Play history — detailed view](docs/media/log-play-history.png)
 
-## Tech Stack
+![Play history](docs/media/play-history.png)
 
-- Backend: Spring Boot 4 (MVC)
-- Language: Java 21
-- Build: Maven (`mvn` / `./mvnw`)
-- Data layer: Spring Data JPA + Hibernate
-- Database: PostgreSQL (default), H2 (local profile)
-- Security: Spring Security
-- Views: Thymeleaf + static assets
-- External API: IGDB (Twitch credentials)
-- Caching: Caffeine (service-level cache)
+### Session timer — track playtime in real time
 
+![Session timer](docs/media/timer.png)
+
+### Review and reflect — capture your experience
+
+![Reflect](docs/media/reflect.png)
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Backend | Spring Boot 4 (MVC) |
+| Language | Java 21 |
+| Build | Maven (`mvn` / `./mvnw`) |
+| Data | Spring Data JPA + Hibernate |
+| Database | PostgreSQL (default), H2 (local profile) |
+| Security | Spring Security |
+| UI | Thymeleaf + static assets |
+| External API | IGDB (Twitch credentials) |
+| Caching | Caffeine (service-level cache) |
