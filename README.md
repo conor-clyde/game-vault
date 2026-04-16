@@ -1,5 +1,5 @@
 # Gamevaultr
-![Logo](docs/media/gvlogo.png)
+![Logo](docs/media/0gvlogo.png)
 A game tracking app to organize your collection, decide what to play, track playthroughs, and reflection on your gaming experience.
 
 ---
