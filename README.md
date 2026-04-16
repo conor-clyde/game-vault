@@ -37,15 +37,19 @@ Password: demopassword
 ## Game tracking — pick up exactly where you left off
 ![Game page](docs/media/game.png)
 
-
+## Intentions - Define how you want to paly
+![Game page](docs/media/intentions.png)
 
 ## Session logging - record each play session
 ![Log play sessions](docs/media/log-play.png)
 
-![Log play history](docs/media/log-play-history.png)
+![Log play history](docs/media/play-history.png)
 
 ## Session Timer — track your playtime in real time
 ![Timer](docs/media/timer.png)
+
+## Review and reflect - Capture your experience
+![Timer](docs/media/reflect.png)
 
 ## Tech Stack
 
