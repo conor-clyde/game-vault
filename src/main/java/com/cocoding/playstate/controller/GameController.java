@@ -29,8 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -200,7 +198,8 @@ public class GameController {
   private record GamePageStats(
       int playLogSumMinutes,
       int totalPlayMinutes,
-      String personalPlayTimeHours,
+      String personalPlayTimeHoursPart,
+      String personalPlayTimeMinutesPart,
       LocalDateTime lastPlayedAt,
       String lastPlayedAtIso,
       String lastPlayedHeroValue,
@@ -221,7 +220,10 @@ public class GameController {
     long playLogSumMinutesLong = playLogRepository.sumDurationMinutesByUserIdAndGameId(userId, gameId);
     int playLogSumMinutes = (int) Math.min(playLogSumMinutesLong, Integer.MAX_VALUE);
     int totalPlayMinutes = UserGame.computeDisplayPlayMinutes(ug, playLogSumMinutes);
-    String personalPlayTimeHours = playDurationFormat.forRecordHoursInputValue(totalPlayMinutes);
+    String personalPlayTimeHoursPart =
+        playDurationFormat.forRecordManualHoursPart(totalPlayMinutes);
+    String personalPlayTimeMinutesPart =
+        playDurationFormat.forRecordManualMinutesPart(totalPlayMinutes);
     String lastPlayedHeroValue = LastPlayedFormat.relativeLabel(lastPlayedAt);
     String lastPlayedAtIso =
         lastPlayedAt == null ? null : lastPlayedAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -238,7 +240,8 @@ public class GameController {
     return new GamePageStats(
         playLogSumMinutes,
         totalPlayMinutes,
-        personalPlayTimeHours,
+        personalPlayTimeHoursPart,
+        personalPlayTimeMinutesPart,
         lastPlayedAt,
         lastPlayedAtIso,
         lastPlayedHeroValue,
@@ -261,7 +264,8 @@ public class GameController {
     model.addAttribute("ownershipPlatformOptions", platformSelectionService.ownershipPlatformChoices(game, ug));
     model.addAttribute("playLogSumMinutes", stats.playLogSumMinutes());
     model.addAttribute("totalPlayMinutes", stats.totalPlayMinutes());
-    model.addAttribute("personalPlayTimeHours", stats.personalPlayTimeHours());
+    model.addAttribute("personalPlayTimeHoursPart", stats.personalPlayTimeHoursPart());
+    model.addAttribute("personalPlayTimeMinutesPart", stats.personalPlayTimeMinutesPart());
     model.addAttribute("lastPlayedAt", stats.lastPlayedAt());
     model.addAttribute("lastPlayedAtIso", stats.lastPlayedAtIso());
     model.addAttribute("lastPlayedHeroValue", stats.lastPlayedHeroValue());
@@ -991,7 +995,8 @@ public class GameController {
       @RequestParam(value = "timesPlayed", required = false) String timesPlayedParam,
       @RequestParam(value = "progressLabel", required = false) String progressLabelParam,
       @RequestParam(value = "progressPercent", required = false) String progressPercentParam,
-      @RequestParam(value = "totalPlayHours", required = false) String totalPlayHoursParam,
+      @RequestParam(value = "manualPlayHours", required = false) String manualPlayHoursParam,
+      @RequestParam(value = "manualPlayMinutes", required = false) String manualPlayMinutesParam,
       @RequestParam(value = "notes", required = false) String notesParam,
       @RequestParam(value = "rating", required = false) Integer ratingParam,
       @RequestParam(value = "review", required = false) String reviewParam,
@@ -1130,50 +1135,68 @@ public class GameController {
 
       long logSumLong = playLogRepository.sumDurationMinutesByUserIdAndGameId(userId, game.getId());
       int logSumAtSave = (int) Math.min(logSumLong, Integer.MAX_VALUE);
-      String hoursRaw =
-          totalPlayHoursParam != null ? totalPlayHoursParam.trim().replace(',', '.') : "";
-      if (hoursRaw.isEmpty()) {
+      String hoursRaw = manualPlayHoursParam != null ? manualPlayHoursParam.trim() : "";
+      String minutesRaw = manualPlayMinutesParam != null ? manualPlayMinutesParam.trim() : "";
+      if (hoursRaw.isEmpty() && minutesRaw.isEmpty()) {
         ug.setPlayTimeManualTotalMinutes(null);
         ug.setPlayTimeManualAnchorLogMinutes(null);
       } else {
-        BigDecimal hoursBd;
-        try {
-          hoursBd = new BigDecimal(hoursRaw);
-        } catch (NumberFormatException ex) {
-          redirectAttributes.addFlashAttribute(
-              "personalError", "Play time must be a number of hours (e.g. 25 or 25.5).");
-          redirectAttributes.addFlashAttribute("personalReopen", "core");
-          return "redirect:/collection/" + key;
+        int hoursPart = 0;
+        int minutesPart = 0;
+        if (!hoursRaw.isEmpty()) {
+          try {
+            hoursPart = Integer.parseInt(hoursRaw);
+          } catch (NumberFormatException ex) {
+            redirectAttributes.addFlashAttribute(
+                "personalError", "Play time hours must be a whole number.");
+            redirectAttributes.addFlashAttribute("personalReopen", "core");
+            return "redirect:/collection/" + key;
+          }
         }
-        if (hoursBd.signum() < 0) {
+        if (!minutesRaw.isEmpty()) {
+          try {
+            minutesPart = Integer.parseInt(minutesRaw);
+          } catch (NumberFormatException ex) {
+            redirectAttributes.addFlashAttribute(
+                "personalError", "Play time minutes must be a whole number.");
+            redirectAttributes.addFlashAttribute("personalReopen", "core");
+            return "redirect:/collection/" + key;
+          }
+        }
+        if (hoursPart < 0) {
           redirectAttributes.addFlashAttribute("personalError", "Play time cannot be negative.");
           redirectAttributes.addFlashAttribute("personalReopen", "core");
           return "redirect:/collection/" + key;
         }
-        if (hoursBd.compareTo(BigDecimal.valueOf(MAX_TOTAL_PLAY_HOURS_INPUT)) > 0) {
+        if (minutesPart < 0 || minutesPart > 59) {
+          redirectAttributes.addFlashAttribute(
+              "personalError", "Play time minutes must be from 0 to 59.");
+          redirectAttributes.addFlashAttribute("personalReopen", "core");
+          return "redirect:/collection/" + key;
+        }
+        if (hoursPart > (int) MAX_TOTAL_PLAY_HOURS_INPUT) {
           redirectAttributes.addFlashAttribute(
               "personalError", "Play time cannot exceed 50,000 hours.");
           redirectAttributes.addFlashAttribute("personalReopen", "core");
           return "redirect:/collection/" + key;
         }
-        BigDecimal minutesBd =
-            hoursBd.multiply(BigDecimal.valueOf(60)).setScale(0, RoundingMode.HALF_UP);
+        long totalMinutesLong = (long) hoursPart * 60L + minutesPart;
         long maxMinutes = (long) MAX_TOTAL_PLAY_HOURS_INPUT * 60L;
-        if (minutesBd.compareTo(BigDecimal.valueOf(maxMinutes)) > 0) {
+        if (totalMinutesLong > maxMinutes) {
           redirectAttributes.addFlashAttribute("personalError", "Total play time is too large.");
           redirectAttributes.addFlashAttribute("personalReopen", "core");
           return "redirect:/collection/" + key;
         }
-        if (minutesBd.compareTo(BigDecimal.valueOf(Integer.MAX_VALUE)) > 0) {
+        if (totalMinutesLong > Integer.MAX_VALUE) {
           redirectAttributes.addFlashAttribute("personalError", "Total play time is too large.");
           redirectAttributes.addFlashAttribute("personalReopen", "core");
           return "redirect:/collection/" + key;
         }
-        if (minutesBd.signum() <= 0) {
+        if (totalMinutesLong <= 0) {
           ug.setPlayTimeManualTotalMinutes(null);
           ug.setPlayTimeManualAnchorLogMinutes(null);
         } else {
-          int parsedMinutes = minutesBd.intValueExact();
+          int parsedMinutes = (int) totalMinutesLong;
           int effectiveBeforeSave = UserGame.computeDisplayPlayMinutes(ug, logSumAtSave);
           boolean hadManualPlayTotal = ug.getPlayTimeManualTotalMinutes() != null;
           boolean clearBecauseMatchesLogSum =

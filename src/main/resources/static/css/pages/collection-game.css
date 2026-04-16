@@ -1139,10 +1139,33 @@
   .cg-body__summary-aside > .cg-aside {
     display: flex;
     flex-direction: column;
+    overflow: visible;
   }
   .cg-body__summary-aside .cg-notes-card.cg-panel {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .cg-body__summary-aside .cg-notes-card-form:not([hidden]),
+  .cg-body__summary-aside .cg-notes-card-view {
+    flex: 0 1 auto;
+    min-height: auto;
+    overflow: visible;
+  }
+  .cg-body__summary-aside .cg-notes-card-form .cg-field--notes-editor {
+    flex: 0 1 auto;
+    min-height: auto;
+    overflow: visible;
+  }
+  .cg-body__summary-aside
+    .cg-notes-card-form
+    .cg-field--notes-editor
+    .cg-notes-input.site-field-textarea {
+    flex: 0 1 auto;
+    max-height: none;
+    min-height: clamp(9.5rem, 40vh, 22rem);
+    overflow-y: auto;
   }
   .cg-body__summary-aside .cg-notes-read-scroll {
     max-height: min(13.5rem, 46vh);
@@ -2107,8 +2130,8 @@ details.cg-pt-accordion[open] .cgpd-card__inner:has(.cg-pt-sessions) {
   line-height: 1.35;
   margin: 0.06rem 0 0;
 }
-#cg-play-summary .cg-ps-stat-block__playtime-input {
-  max-width: 11rem;
+#cg-play-summary .cg-ps-stat-block--playtime .cg-ps-playtime-duration {
+  max-width: 100%;
 }
 .cg-pt-inline-edit__playtime-hint {
   line-height: 1.35;
@@ -2560,6 +2583,7 @@ details.cg-pt-accordion[open] .cgpd-card__inner:has(.cg-pt-sessions) {
 #cg-play-summary .cg-play-summary-footer__grid--edit .cg-field {
   margin: 0;
   min-width: 0;
+  width: 100%;
 }
 #cg-play-summary .cg-play-summary-footer__grid--edit .cg-label {
   color: var(--cg-field-label-color);
@@ -2571,14 +2595,15 @@ details.cg-pt-accordion[open] .cgpd-card__inner:has(.cg-pt-sessions) {
   margin-bottom: clamp(0.28rem, 0.75vw, 0.38rem);
   text-transform: uppercase;
 }
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   #cg-play-summary .cg-play-summary-footer__grid--layout {
     grid-template-areas: "ft-platform" "ft-ownership" "ft-started" "ft-finished" "ft-added";
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   #cg-play-summary
     .cg-play-summary-footer__grid--layout.cg-play-summary-footer__grid--edit {
     grid-template-areas: "ft-platform" "ft-ownership" "ft-started" "ft-finished";
+    grid-template-columns: minmax(0, 1fr);
   }
   #cg-play-summary .cg-play-summary-footer__kv--added {
     justify-self: start;

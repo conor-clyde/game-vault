@@ -1,7 +1,5 @@
 package com.cocoding.playstate.format;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import org.springframework.stereotype.Component;
 
 @Component("playDurationFormat")
@@ -49,14 +47,22 @@ public class PlayDurationFormat {
     return forLogMinutesCompactLower(totalMinutes);
   }
 
-  public String forRecordHoursInputValue(int totalMinutes) {
+  /**
+   * Whole hours for manual total playtime (matches playthrough h/m fields: empty if &lt; 60 min).
+   */
+  public String forRecordManualHoursPart(int totalMinutes) {
+    if (totalMinutes < 60) {
+      return "";
+    }
+    return String.valueOf(totalMinutes / 60);
+  }
+
+  /** Minutes 0–59 for manual total playtime (empty only when total is 0). */
+  public String forRecordManualMinutesPart(int totalMinutes) {
     if (totalMinutes <= 0) {
       return "";
     }
-    return BigDecimal.valueOf(totalMinutes)
-        .divide(BigDecimal.valueOf(60), 8, RoundingMode.HALF_UP)
-        .stripTrailingZeros()
-        .toPlainString();
+    return String.valueOf(totalMinutes % 60);
   }
 
   private static String formatMinutes(Integer minutes, String hourSuffix) {

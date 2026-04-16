@@ -1057,17 +1057,38 @@
                                 class="cg-ps-stat-block cg-ps-stat-block--edit cg-ps-stat-block--playtime"
                               >
                                 <div class="cg-ps-stat-block__control">
-                                  <input
-                                    type="text"
-                                    class="site-field-input cg-ps-playtime-total-input cg-ps-stat-block__playtime-input"
-                                    name="totalPlayHours"
-                                    inputmode="decimal"
-                                    maxlength="8"
-                                    autocomplete="off"
-                                    th:value="${personalPlayTimeHours}"
-                                    placeholder="e.g. 33.2"
-                                    aria-label="Total play time in hours"
-                                  />
+                                  <div
+                                    class="cg-pt-edit-duration-split cg-duration-row cg-ps-playtime-duration"
+                                    role="group"
+                                    aria-labelledby="colGamePersonalPlayedLabel"
+                                  >
+                                    <input
+                                      type="text"
+                                      class="site-field-input"
+                                      name="manualPlayHours"
+                                      id="colGamePersonalPlaytimeHours"
+                                      inputmode="numeric"
+                                      maxlength="5"
+                                      data-cg-hours
+                                      autocomplete="off"
+                                      th:value="${personalPlayTimeHoursPart}"
+                                      aria-label="Hours played"
+                                    />
+                                    <span class="cg-pt-edit-duration-suffix">h</span>
+                                    <input
+                                      type="text"
+                                      class="site-field-input"
+                                      name="manualPlayMinutes"
+                                      id="colGamePersonalPlaytimeMinutes"
+                                      inputmode="numeric"
+                                      maxlength="2"
+                                      data-cg-mins
+                                      autocomplete="off"
+                                      th:value="${personalPlayTimeMinutesPart}"
+                                      aria-label="Minutes played"
+                                    />
+                                    <span class="cg-pt-edit-duration-suffix">m</span>
+                                  </div>
                                   <p
                                     class="cg-subtle-field-hint cg-ps-playtime-total__hint cg-ps-stat-block__field-hint"
                                   >
@@ -1075,7 +1096,9 @@
                                     can manually override it.
                                   </p>
                                 </div>
-                                <span class="cg-ps-stat-block__label"
+                                <span
+                                  class="cg-ps-stat-block__label"
+                                  id="colGamePersonalPlayedLabel"
                                   >Played</span
                                 >
                               </div>
