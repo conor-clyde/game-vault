@@ -20,12 +20,12 @@ import com.cocoding.playstate.repository.UserGamePlaythroughRepository;
 import com.cocoding.playstate.repository.UserGameRepository;
 import com.cocoding.playstate.util.ReflectionTagsJson;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.LongStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,9 +53,6 @@ public class DemoDataSeedService {
     19560L, // God of War (2018)
   };
 
-  private static final List<String> DEMO_API_IDS =
-      LongStream.of(DEMO_GAME_IDS).mapToObj(String::valueOf).toList();
-
   private final UserAccountRepository userAccountRepository;
   private final PasswordEncoder passwordEncoder;
   private final IgdbService igdbService;
@@ -73,9 +70,6 @@ public class DemoDataSeedService {
 
   @Value("${demo.password:}")
   private String demoPassword;
-
-  @Value("${demo.email:demo@example.com}")
-  private String demoEmail;
 
   public DemoDataSeedService(
       UserAccountRepository userAccountRepository,
@@ -111,10 +105,6 @@ public class DemoDataSeedService {
     }
     String username = demoUsername.trim().toLowerCase(Locale.ROOT);
     if (!ensureDemoUserAccount(username)) {
-      return;
-    }
-    if (alreadySeeded(username)) {
-      logger.debug("Demo collection already present; skipping seed.");
       return;
     }
     List<Map<String, Object>> rows = igdbService.fetchGamesByIgdbIds(DEMO_GAME_IDS);
@@ -163,7 +153,6 @@ public class DemoDataSeedService {
               .findByUserIdAndGameId(username, game.getId())
               .orElseGet(() -> new UserGame(username, game.getId()));
       ug.setPlatform(firstPlatformName(sgr));
-      ug.setOwnershipType(OwnershipType.DIGITAL);
       applyGameProfile(igdbId, ug);
       ug.setProgressUpdatedAt(LocalDateTime.now().minusDays(1));
       userGameRepository.save(ug);
@@ -177,38 +166,19 @@ public class DemoDataSeedService {
     if (userAccountRepository.existsByUsernameIgnoreCase(username)) {
       return true;
     }
-    String normalizedEmail = null;
-    if (demoEmail != null && !demoEmail.isBlank()) {
-      normalizedEmail = demoEmail.trim().toLowerCase(Locale.ROOT);
-      if (userAccountRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-        logger.warn(
-            "Demo user '{}' not created because email '{}' already exists.",
-            username,
-            normalizedEmail);
-        return false;
-      }
-    }
     UserAccount account = new UserAccount();
     account.setUsername(username);
     account.setPasswordHash(passwordEncoder.encode(demoPassword));
-    if (normalizedEmail != null) {
-      account.setEmail(normalizedEmail);
-    }
     try {
       // Force insert now so uniqueness violations are caught here, not at transaction commit.
       userAccountRepository.saveAndFlush(account);
       logger.info("Created demo user '{}'.", username);
       return true;
     } catch (DataIntegrityViolationException e) {
-      // Another startup thread/instance may have created the same username/email first.
-      logger.warn("Demo user '{}' not created because username/email already exists.", username);
+      // Another startup thread/instance may have created the same username first.
+      logger.warn("Demo user '{}' not created because username already exists.", username);
       return userAccountRepository.existsByUsernameIgnoreCase(username);
     }
-  }
-
-  private boolean alreadySeeded(String userId) {
-    return userGameRepository.findByUserIdAndGame_ApiIdIn(userId, DEMO_API_IDS).size()
-        >= DEMO_API_IDS.size();
   }
 
   private static String firstPlatformName(SearchGameRow row) {
@@ -237,6 +207,7 @@ public class DemoDataSeedService {
 
   private static void applyElden(UserGame ug) {
     ug.setStatus(GameStatus.PLAYING);
+    ug.setOwnershipType(OwnershipType.DIGITAL);
     ug.setCompletionType(CompletionType.NOT_COMPLETED);
     ug.setNotes(
         "Taking it slow: I clear every cave before moving the story. The world feels endless in the"
@@ -255,6 +226,7 @@ public class DemoDataSeedService {
 
   private static void applyBg3(UserGame ug) {
     ug.setStatus(GameStatus.FINISHED);
+    ug.setOwnershipType(OwnershipType.PHYSICAL);
     ug.setCompletionType(CompletionType.MAIN_STORY);
     ug.setNotes("Friday night co-op campaign with friends — voice acting carried so many scenes.");
     ug.setRating(10);
@@ -263,7 +235,7 @@ public class DemoDataSeedService {
         "Larian's writing respects player agency without losing heart. Combat stayed fresh through"
             + " Act III, and I actually cared about companion quests. Minor pacing dips in the city"
             + " act, but the highs more than compensate.");
-    ug.setWhyPlaying(WhyPlaying.STORY);
+    ug.setWhyPlayings(List.of(WhyPlaying.STORY, WhyPlaying.SOCIAL, WhyPlaying.PROGRESS));
     ug.setReflectionTagsJson(
         ReflectionTagsJson.serializeList(List.of("co-op", "turn-based", "branching-story")));
     ug.setStartedDate(java.time.LocalDate.of(2024, 9, 1));
@@ -272,25 +244,31 @@ public class DemoDataSeedService {
   }
 
   private static void applyCyberpunk(UserGame ug) {
-    ug.setStatus(GameStatus.PAUSED);
+    ug.setStatus(GameStatus.DROPPED);
+    ug.setOwnershipType(OwnershipType.SUBSCRIPTION);
     ug.setCompletionType(CompletionType.NOT_COMPLETED);
-    ug.setNotes("Parked after Phantom Liberty — waiting for a quiet week to see the new endings.");
+    ug.setNotes(
+        "Dropped after Phantom Liberty finale. The city is incredible, but I burned out on the"
+            + " side-gig cleanup loop.");
     ug.setRating(7);
     ug.setReviewHeadline("Style and side gigs shine");
     ug.setReview(
         "Night City is still the star. Main story landed better post-2.0; a few rough quest beats"
             + " remain.");
-    ug.setWhyPlaying(WhyPlaying.CURIOSITY);
+    ug.setWhyPlayings(List.of(WhyPlaying.CURIOSITY, WhyPlaying.INTENSITY));
     ug.setProgressPercent(78);
     ug.setProgressLabel("Post-Dogtown wrap-up");
     ug.setStartedDate(java.time.LocalDate.of(2025, 2, 5));
+    ug.setFinishedDate(java.time.LocalDate.of(2025, 5, 30));
+    ug.setTimesPlayed(1);
   }
 
   private static void applyStardew(UserGame ug) {
     ug.setStatus(GameStatus.PLAYING);
+    ug.setOwnershipType(OwnershipType.FREE);
     ug.setCompletionType(CompletionType.ENDLESS);
     ug.setNotes("Year 3 on the farm. Fishing mini-game is OP for early gold.");
-    ug.setWhyPlaying(WhyPlaying.UNWIND);
+    ug.setWhyPlayings(List.of(WhyPlaying.UNWIND, WhyPlaying.PROGRESS));
     ug.setReflectionHighlight("Perfect 20-minute chill sessions between work blocks.");
     ug.setReflectionTagsJson(
         ReflectionTagsJson.serializeList(List.of("cozy", "farming", "pixel-art")));
@@ -299,47 +277,55 @@ public class DemoDataSeedService {
   }
 
   private static void applyHollowKnight(UserGame ug) {
-    ug.setStatus(GameStatus.FINISHED);
+    ug.setStatus(GameStatus.PAUSED);
+    ug.setOwnershipType(OwnershipType.DIGITAL);
     ug.setCompletionType(CompletionType.MAIN_STORY);
-    ug.setNotes("That last stretch in the abyss — brutal but fair.");
+    ug.setNotes("Paused at Godhome content. Main ending done, but pantheons are a longer-term project.");
     ug.setRating(9);
     ug.setReviewHeadline("Atmosphere and mobility in perfect lockstep");
     ug.setReview(
         "Every new ability recontextualizes old zones. Bosses teach patterns; deaths feel like"
             + " tuition, not punishment.");
-    ug.setWhyPlaying(WhyPlaying.CHALLENGE);
+    ug.setWhyPlayings(List.of(WhyPlaying.CHALLENGE, WhyPlaying.PROGRESS));
     ug.setStartedDate(java.time.LocalDate.of(2024, 4, 10));
     ug.setFinishedDate(java.time.LocalDate.of(2024, 6, 2));
+    ug.setProgressPercent(86);
+    ug.setProgressLabel("Godhome pantheon attempts");
   }
 
   private static void applyPortal2(UserGame ug) {
-    ug.setStatus(GameStatus.FINISHED);
+    ug.setStatus(GameStatus.NOT_PLAYING);
+    ug.setOwnershipType(OwnershipType.UNOWNED);
     ug.setCompletionType(CompletionType.HUNDRED_PERCENT);
-    ug.setNotes("Co-op puzzles with a friend — communication matters more than aim.");
+    ug.setNotes(
+        "Finished years ago on another account. Keeping it in backlog for a possible co-op replay"
+            + " with a new friend.");
     ug.setRating(10);
     ug.setReviewHeadline("Pacing and wit still unmatched");
     ug.setReview("Lean, funny, and mechanically transparent. No filler between the good bits.");
-    ug.setWhyPlaying(WhyPlaying.SOCIAL);
-    ug.setFinishedDate(java.time.LocalDate.of(2023, 11, 18));
+    ug.setWhyPlayings(List.of(WhyPlaying.SOCIAL, WhyPlaying.LEGACY));
+    ug.setStartedDate(LocalDate.of(2023, 11, 1));
+    ug.setFinishedDate(LocalDate.of(2023, 11, 18));
+    ug.setTimesPlayed(2);
   }
 
   private static void applyGodOfWar(UserGame ug) {
     ug.setStatus(GameStatus.FINISHED);
+    ug.setOwnershipType(OwnershipType.PHYSICAL);
     ug.setCompletionType(CompletionType.MAIN_STORY);
     ug.setNotes("Boys-trip through the realms — combat weight feels incredible on a controller.");
     ug.setRating(8);
     ug.setReviewHeadline("A confident reinvention");
     ug.setReview(
         "Character work carries the middle acts; optional realms padded the runtime a bit.");
-    ug.setWhyPlaying(WhyPlaying.LEGACY);
+    ug.setWhyPlayings(List.of(WhyPlaying.LEGACY, WhyPlaying.STORY));
     ug.setStartedDate(java.time.LocalDate.of(2024, 1, 8));
     ug.setFinishedDate(java.time.LocalDate.of(2024, 2, 14));
   }
 
   private void seedPlaythroughsAndLogs(String userId, Long gameId, long igdbId) {
-    if (playthroughRepository.countByUserIdAndGameId(userId, gameId) > 0) {
-      return;
-    }
+    playLogRepository.deleteByUserIdAndGameId(userId, gameId);
+    playthroughRepository.deleteByUserIdAndGameId(userId, gameId);
     switch ((int) igdbId) {
       case 119133 -> seedEldenRing(userId, gameId);
       case 194267 -> seedBg3(userId, gameId);
@@ -399,6 +385,22 @@ public class DemoDataSeedService {
         120,
         "Quiet night of exploration — found a catacomb I had walked past ten times.",
         PlayLogSessionExperience.OKAY);
+    saveLog(
+        userId,
+        gameId,
+        main.getId(),
+        LocalDateTime.of(2026, 3, 24, 22, 10),
+        65,
+        "Tried a new ash of war setup and bullied two mini-bosses in a row.",
+        PlayLogSessionExperience.GREAT);
+    saveLog(
+        userId,
+        gameId,
+        main.getId(),
+        LocalDateTime.of(2026, 4, 6, 18, 55),
+        50,
+        "Small progress session before dinner, just map cleanup and materials farming.",
+        PlayLogSessionExperience.GOOD);
   }
 
   private void seedBg3(String userId, Long gameId) {
@@ -431,6 +433,22 @@ public class DemoDataSeedService {
         240,
         "Final fights + wrap-up. Sat through credits — rare for me.",
         PlayLogSessionExperience.GREAT);
+    saveLog(
+        userId,
+        gameId,
+        pt.getId(),
+        LocalDateTime.of(2024, 11, 9, 19, 25),
+        205,
+        "Companion quest marathon. Several outcomes changed based on one dialogue check.",
+        PlayLogSessionExperience.GREAT);
+    saveLog(
+        userId,
+        gameId,
+        pt.getId(),
+        LocalDateTime.of(2024, 9, 19, 18, 40),
+        130,
+        "Act I exploration detour, accidentally found a sequence break.",
+        PlayLogSessionExperience.GOOD);
   }
 
   private void seedStardew(String userId, Long gameId) {
@@ -454,6 +472,30 @@ public class DemoDataSeedService {
         25,
         "Coffee, crops, and a lucky meteor strike.",
         PlayLogSessionExperience.GOOD);
+    saveLog(
+        userId,
+        gameId,
+        pt.getId(),
+        LocalDateTime.of(2026, 2, 27, 21, 0),
+        45,
+        "Skull cavern run: finally reached floor 100 with enough bombs.",
+        PlayLogSessionExperience.GREAT);
+    saveLog(
+        userId,
+        gameId,
+        pt.getId(),
+        LocalDateTime.of(2026, 3, 5, 7, 50),
+        30,
+        "Quick before-work session to reorganize farm paths and artisan sheds.",
+        PlayLogSessionExperience.OKAY);
+    saveLog(
+        userId,
+        gameId,
+        pt.getId(),
+        LocalDateTime.of(2026, 3, 20, 20, 5),
+        55,
+        "Rainy in-game day, mostly fishing and villager gift route.",
+        PlayLogSessionExperience.GOOD);
   }
 
   private void seedSingleCasualLog(String userId, Long gameId, long igdbId) {
@@ -464,14 +506,17 @@ public class DemoDataSeedService {
     pt.setShortName("Playthrough 1");
     pt.setDifficulty("Normal");
     pt.setCurrent(false);
-    pt.setProgressStatus(PlaythroughProgressStatus.COMPLETED);
-    pt.setEndedAt(Instant.parse("2025-06-01T12:00:00Z"));
+    pt.setProgressStatus(
+        igdbId == 18472 ? PlaythroughProgressStatus.PLAYING : PlaythroughProgressStatus.COMPLETED);
+    if (igdbId != 18472) {
+      pt.setEndedAt(Instant.parse("2025-06-01T12:00:00Z"));
+    }
     pt = playthroughRepository.save(pt);
 
     String note =
         switch ((int) igdbId) {
           case 1877 -> "Side gigs in Japantown — photo mode ate 20 minutes.";
-          case 18472 -> "Bench rest never felt so earned.";
+          case 18472 -> "Short Godhome attempts tonight. Muscle memory is coming back slowly.";
           case 1068 -> "Wheatley chapters — perfect difficulty curve.";
           case 19560 -> "Baldur fight choreography is still stunning.";
           default -> "Wrapped a memorable run.";
@@ -484,6 +529,20 @@ public class DemoDataSeedService {
         75,
         note,
         PlayLogSessionExperience.GOOD);
+    saveLog(
+        userId,
+        gameId,
+        pt.getId(),
+        LocalDateTime.of(2025, 5, 28, 21, 5),
+        igdbId == 1068 ? 60 : 90,
+        switch ((int) igdbId) {
+          case 1877 -> "Tried a stealth-heavy build and bounced off it after one mission chain.";
+          case 18472 -> "Practiced one boss for an hour. Great combat rhythm, still very rusty.";
+          case 1068 -> "Co-op replay with a first-timer. Their reaction to each reveal was gold.";
+          case 19560 -> "Cleaned up valkyrie fights. Optional bosses are still a huge spike.";
+          default -> "Another evening session to push progress.";
+        },
+        igdbId == 1877 ? PlayLogSessionExperience.MEH : PlayLogSessionExperience.GREAT);
   }
 
   private void saveLog(

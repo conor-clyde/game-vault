@@ -10,14 +10,11 @@ public class UserAccount {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(unique = true, length = 64)
+  @Column(nullable = false, unique = true, length = 64)
   private String username;
 
   @Column(name = "password_hash", nullable = false, length = 255)
   private String passwordHash;
-
-  @Column(length = 255, unique = true)
-  private String email;
 
   public Long getId() {
     return id;
@@ -41,13 +38,5 @@ public class UserAccount {
 
   public void setPasswordHash(String passwordHash) {
     this.passwordHash = passwordHash;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
   }
 }

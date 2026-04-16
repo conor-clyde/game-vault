@@ -29,9 +29,6 @@ public class DevUserAccountSeed implements ApplicationRunner {
   @Value("${security.user.password:}")
   private String seedPassword;
 
-  @Value("${security.user.email:}")
-  private String seedEmail;
-
   public DevUserAccountSeed(
       UserAccountRepository userAccountRepository, PasswordEncoder passwordEncoder) {
     this.userAccountRepository = userAccountRepository;
@@ -50,25 +47,14 @@ public class DevUserAccountSeed implements ApplicationRunner {
     if (userAccountRepository.existsByUsernameIgnoreCase(username)) {
       return;
     }
-    String normalizedEmail = null;
-    if (seedEmail != null && !seedEmail.isBlank()) {
-      normalizedEmail = seedEmail.trim().toLowerCase(Locale.ROOT);
-      if (userAccountRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-        return;
-      }
-    }
     UserAccount account = new UserAccount();
     account.setUsername(username);
     account.setPasswordHash(passwordEncoder.encode(seedPassword));
-    if (normalizedEmail != null) {
-      account.setEmail(normalizedEmail);
-    }
     try {
       userAccountRepository.save(account);
     } catch (DataIntegrityViolationException e) {
       // Startup can race with another account create flow; skip if uniqueness is already satisfied.
-      logger.warn(
-          "Dev seed user '{}' not created because username/email already exists.", username);
+      logger.warn("Dev seed user '{}' not created because username already exists.", username);
     }
   }
 }

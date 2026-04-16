@@ -46,7 +46,6 @@ public class UserRegistrationService {
     }
     UserAccount account = new UserAccount();
     account.setUsername(username);
-    account.setEmail(null);
     account.setPasswordHash(passwordEncoder.encode(password));
     userAccountRepository.save(account);
     return Optional.empty();
