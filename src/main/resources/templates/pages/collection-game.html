@@ -1402,7 +1402,6 @@
                                   >
                                   <div
                                     class="cg-status-field-wrap"
-                                    id="colGameFinishedDatePromptAnchor"
                                   >
                                     <input
                                       type="date"
@@ -1412,37 +1411,6 @@
                                       autocomplete="off"
                                       th:value="${userGame.finishedDate != null ? #temporals.format(userGame.finishedDate, 'yyyy-MM-dd') : ''}"
                                     />
-                                    <div
-                                      id="colGameFinishedDatePrompt"
-                                      class="cg-finished-date-prompt dropdown-panel"
-                                      role="dialog"
-                                      aria-modal="false"
-                                      aria-labelledby="colGameFinishedDatePromptTitle"
-                                      aria-hidden="true"
-                                    >
-                                      <p
-                                        id="colGameFinishedDatePromptTitle"
-                                        class="cg-finished-date-prompt__lead"
-                                      ></p>
-                                      <div
-                                        class="cg-finished-date-prompt__actions"
-                                      >
-                                        <button
-                                          type="button"
-                                          class="btn btn-primary cg-finished-date-prompt__btn-yes"
-                                          id="colGameFinishedDatePromptYes"
-                                        >
-                                          Use today’s date
-                                        </button>
-                                        <button
-                                          type="button"
-                                          class="btn btn-ghost cg-finished-date-prompt__btn-no"
-                                          id="colGameFinishedDatePromptNo"
-                                        >
-                                          Keep current
-                                        </button>
-                                      </div>
-                                    </div>
                                   </div>
                                 </div>
                               </div>

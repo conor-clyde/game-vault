@@ -19,7 +19,14 @@ public class SecurityConfig {
     http.authorizeHttpRequests(
             auth -> {
               auth.requestMatchers(
-                      "/", "/account", "/login", "/register", "/error", "/css/**", "/js/**")
+                      "/",
+                      "/account",
+                      "/login",
+                      "/register",
+                      "/error",
+                      "/css/**",
+                      "/js/**",
+                      "/images/**")
                   .permitAll();
               if (h2ConsoleEnabled) {
                 auth.requestMatchers("/h2-console/**").permitAll();

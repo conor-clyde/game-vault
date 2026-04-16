@@ -34,35 +34,29 @@
               <div
                 class="home-hero-preview-grid home-hero-preview-grid--playing"
               >
-                <div class="home-hero-preview-tile">
+                <div
+                  class="home-hero-preview-tile"
+                  th:each="tile : ${marketingHeroRow1}"
+                >
                   <div
-                    class="home-hero-preview-platform home-hero-preview-platform--pc"
+                    class="home-hero-preview-platform"
+                    th:classappend="${' ' + tile.platformClass}"
+                    th:text="${tile.platformLabel != null ? tile.platformLabel : 'PC'}"
                   >
                     PC
                   </div>
                   <div
-                    class="home-hero-preview-cover home-hero-preview-cover--a"
-                  ></div>
-                </div>
-                <div class="home-hero-preview-tile">
-                  <div
-                    class="home-hero-preview-platform home-hero-preview-platform--ps"
+                    class="home-hero-preview-cover"
+                    th:classappend="${' ' + tile.fallbackClass}"
                   >
-                    PS5
+                    <img
+                      th:if="${tile.coverImageUrl != null}"
+                      th:src="${tile.coverImageUrl}"
+                      th:alt="${tile.title + ' cover art'}"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
-                  <div
-                    class="home-hero-preview-cover home-hero-preview-cover--b"
-                  ></div>
-                </div>
-                <div class="home-hero-preview-tile">
-                  <div
-                    class="home-hero-preview-platform home-hero-preview-platform--nin"
-                  >
-                    Switch
-                  </div>
-                  <div
-                    class="home-hero-preview-cover home-hero-preview-cover--c"
-                  ></div>
                 </div>
               </div>
             </div>
@@ -70,58 +64,25 @@
               <div class="home-hero-preview-playnext-under" aria-hidden="true">
                 <div class="home-hero-preview-playnext-clip">
                   <div class="home-hero-preview-playnext-row">
-                    <div class="home-hero-preview-playnext-tile-wrap">
+                    <div
+                      class="home-hero-preview-playnext-tile-wrap"
+                      th:each="tile : ${marketingHeroRow3}"
+                    >
                       <div
                         class="home-hero-preview-tile home-hero-preview-tile--dense home-hero-preview-tile--peek home-hero-preview-tile--cover-only"
                       >
                         <div
-                          class="home-hero-preview-cover home-hero-preview-cover--b"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="home-hero-preview-playnext-tile-wrap">
-                      <div
-                        class="home-hero-preview-tile home-hero-preview-tile--dense home-hero-preview-tile--peek home-hero-preview-tile--cover-only"
-                      >
-                        <div
-                          class="home-hero-preview-cover home-hero-preview-cover--c"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="home-hero-preview-playnext-tile-wrap">
-                      <div
-                        class="home-hero-preview-tile home-hero-preview-tile--dense home-hero-preview-tile--peek home-hero-preview-tile--cover-only"
-                      >
-                        <div
-                          class="home-hero-preview-cover home-hero-preview-cover--d"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="home-hero-preview-playnext-tile-wrap">
-                      <div
-                        class="home-hero-preview-tile home-hero-preview-tile--dense home-hero-preview-tile--peek home-hero-preview-tile--cover-only"
-                      >
-                        <div
-                          class="home-hero-preview-cover home-hero-preview-cover--e"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="home-hero-preview-playnext-tile-wrap">
-                      <div
-                        class="home-hero-preview-tile home-hero-preview-tile--dense home-hero-preview-tile--peek home-hero-preview-tile--cover-only"
-                      >
-                        <div
-                          class="home-hero-preview-cover home-hero-preview-cover--f"
-                        ></div>
-                      </div>
-                    </div>
-                    <div class="home-hero-preview-playnext-tile-wrap">
-                      <div
-                        class="home-hero-preview-tile home-hero-preview-tile--dense home-hero-preview-tile--peek home-hero-preview-tile--cover-only"
-                      >
-                        <div
-                          class="home-hero-preview-cover home-hero-preview-cover--g"
-                        ></div>
+                          class="home-hero-preview-cover"
+                          th:classappend="${' ' + tile.fallbackClass}"
+                        >
+                          <img
+                            th:if="${tile.coverImageUrl != null}"
+                            th:src="${tile.coverImageUrl}"
+                            th:alt="${tile.title + ' cover art'}"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -142,63 +103,27 @@
                 >
                   <div
                     class="home-hero-preview-tile home-hero-preview-tile--dense"
+                    th:each="tile : ${marketingHeroRow2}"
                   >
                     <div
-                      class="home-hero-preview-platform home-hero-preview-platform--xb"
-                    >
-                      Xbox
-                    </div>
-                    <div
-                      class="home-hero-preview-cover home-hero-preview-cover--d"
-                    ></div>
-                  </div>
-                  <div
-                    class="home-hero-preview-tile home-hero-preview-tile--dense"
-                  >
-                    <div
-                      class="home-hero-preview-platform home-hero-preview-platform--pc"
+                      class="home-hero-preview-platform"
+                      th:classappend="${' ' + tile.platformClass}"
+                      th:text="${tile.platformLabel != null ? tile.platformLabel : 'PC'}"
                     >
                       PC
                     </div>
                     <div
-                      class="home-hero-preview-cover home-hero-preview-cover--e"
-                    ></div>
-                  </div>
-                  <div
-                    class="home-hero-preview-tile home-hero-preview-tile--dense"
-                  >
-                    <div
-                      class="home-hero-preview-platform home-hero-preview-platform--ps"
+                      class="home-hero-preview-cover"
+                      th:classappend="${' ' + tile.fallbackClass}"
                     >
-                      PS5
+                      <img
+                        th:if="${tile.coverImageUrl != null}"
+                        th:src="${tile.coverImageUrl}"
+                        th:alt="${tile.title + ' cover art'}"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
-                    <div
-                      class="home-hero-preview-cover home-hero-preview-cover--f"
-                    ></div>
-                  </div>
-                  <div
-                    class="home-hero-preview-tile home-hero-preview-tile--dense"
-                  >
-                    <div
-                      class="home-hero-preview-platform home-hero-preview-platform--nin"
-                    >
-                      Switch
-                    </div>
-                    <div
-                      class="home-hero-preview-cover home-hero-preview-cover--g"
-                    ></div>
-                  </div>
-                  <div
-                    class="home-hero-preview-tile home-hero-preview-tile--dense"
-                  >
-                    <div
-                      class="home-hero-preview-platform home-hero-preview-platform--pc"
-                    >
-                      PC
-                    </div>
-                    <div
-                      class="home-hero-preview-cover home-hero-preview-cover--a"
-                    ></div>
                   </div>
                 </div>
               </div>

@@ -6,8 +6,10 @@ import com.cocoding.playstate.dto.home.HomeDashboardDtos.HomeHeroStats;
 import com.cocoding.playstate.dto.home.HomeDashboardDtos.HomeInProgressTile;
 import com.cocoding.playstate.dto.home.HomeDashboardDtos.HomePreviewTile;
 import com.cocoding.playstate.dto.home.HomeDashboardDtos.HomeSessionRow;
+import com.cocoding.playstate.dto.search.SearchGameRow;
 import com.cocoding.playstate.format.PlayDurationFormat;
 import com.cocoding.playstate.domain.enums.GameStatus;
+import com.cocoding.playstate.igdb.IgdbService;
 import com.cocoding.playstate.model.PlayLog;
 import com.cocoding.playstate.model.UserGame;
 import com.cocoding.playstate.domain.enums.WhyPlaying;
@@ -51,24 +53,68 @@ public class HomeController {
   private static final int HERO_RECENTLY_PLAYED_GAME_LIMIT = 3;
 
   private static final String FALLBACK_DASHBOARD_NAME = "there";
+  private static final long[] MARKETING_ROW_1_IDS = {7346L, 76253L, 472L};
+  private static final String[] MARKETING_ROW_1_TITLES = {
+    "The Legend of Zelda: Breath of the Wild", "Devil May Cry 5", "The Elder Scrolls V: Skyrim"
+  };
+  private static final String[] MARKETING_ROW_1_FALLBACKS = {
+    "home-hero-preview-cover--a", "home-hero-preview-cover--b", "home-hero-preview-cover--c"
+  };
+  private static final String[] MARKETING_ROW_1_PLATFORMS = {"Switch", "PS5", "PC"};
+  private static final long[] MARKETING_ROW_2_IDS = {14593L, 113112L, 1009L, 11169L, 1879L};
+  private static final String[] MARKETING_ROW_2_TITLES = {
+    "Hollow Knight",
+    "Hades",
+    "The Last of Us",
+    "Final Fantasy VII Remake",
+    "Terraria"
+  };
+  private static final String[] MARKETING_ROW_2_FALLBACKS = {
+    "home-hero-preview-cover--d",
+    "home-hero-preview-cover--e",
+    "home-hero-preview-cover--f",
+    "home-hero-preview-cover--g",
+    "home-hero-preview-cover--a"
+  };
+  private static final String[] MARKETING_ROW_2_PLATFORMS = {"PC", "PC", "PS3", "PS5", "Xbox"};
+  private static final long[] MARKETING_ROW_3_IDS = {119133L, 1020L, 125174L, 119171L, 186725L, 17000L};
+  private static final String[] MARKETING_ROW_3_TITLES = {
+    "Elden Ring",
+    "Grand Theft Auto V",
+    "Overwatch",
+    "Baldur's Gate 3",
+    "Vampire Survivors",
+    "Stardew Valley"
+  };
+  private static final String[] MARKETING_ROW_3_FALLBACKS = {
+    "home-hero-preview-cover--b",
+    "home-hero-preview-cover--c",
+    "home-hero-preview-cover--d",
+    "home-hero-preview-cover--e",
+    "home-hero-preview-cover--f",
+    "home-hero-preview-cover--g"
+  };
 
   private final UserGameRepository userGameRepository;
   private final PlayLogRepository playLogRepository;
   private final GameRepository gameRepository;
   private final UserAccountRepository userAccountRepository;
   private final PlayDurationFormat playDurationFormat;
+  private final IgdbService igdbService;
 
   public HomeController(
       UserGameRepository userGameRepository,
       PlayLogRepository playLogRepository,
       GameRepository gameRepository,
       UserAccountRepository userAccountRepository,
-      PlayDurationFormat playDurationFormat) {
+      PlayDurationFormat playDurationFormat,
+      IgdbService igdbService) {
     this.userGameRepository = userGameRepository;
     this.playLogRepository = playLogRepository;
     this.gameRepository = gameRepository;
     this.userAccountRepository = userAccountRepository;
     this.playDurationFormat = playDurationFormat;
+    this.igdbService = igdbService;
   }
 
   @GetMapping("/")
@@ -82,8 +128,95 @@ public class HomeController {
     } else {
       model.addAttribute("siteUserCount", userAccountRepository.count());
       model.addAttribute("siteSessionsLogged", playLogRepository.count());
+      populateMarketingHeroRows(model);
     }
     return "pages/home";
+  }
+
+  private void populateMarketingHeroRows(Model model) {
+    Map<Long, String> coverById = loadMarketingCoverUrls();
+    model.addAttribute(
+        "marketingHeroRow1",
+        buildMarketingRow(
+            MARKETING_ROW_1_IDS,
+            MARKETING_ROW_1_TITLES,
+            MARKETING_ROW_1_FALLBACKS,
+            MARKETING_ROW_1_PLATFORMS,
+            coverById));
+    model.addAttribute(
+        "marketingHeroRow2",
+        buildMarketingRow(
+            MARKETING_ROW_2_IDS,
+            MARKETING_ROW_2_TITLES,
+            MARKETING_ROW_2_FALLBACKS,
+            MARKETING_ROW_2_PLATFORMS,
+            coverById));
+    model.addAttribute(
+        "marketingHeroRow3",
+        buildMarketingRow(
+            MARKETING_ROW_3_IDS, MARKETING_ROW_3_TITLES, MARKETING_ROW_3_FALLBACKS, null, coverById));
+  }
+
+  private Map<Long, String> loadMarketingCoverUrls() {
+    long[] allIds = {
+      7346L, 76253L, 472L, 1879L, 1009L, 14593L, 11169L, 113112L, 119133L, 1020L, 125174L, 119171L,
+      186725L, 17000L
+    };
+    List<Map<String, Object>> rows = igdbService.fetchGamesByIgdbIds(allIds);
+    if (rows.isEmpty()) {
+      return Map.of();
+    }
+    Map<Long, String> out = new HashMap<>();
+    for (Map<String, Object> row : rows) {
+      SearchGameRow game = SearchGameRow.fromIgdbMap(row);
+      if (game.id <= 0) {
+        continue;
+      }
+      String coverUrl = game.getCoverImageUrl();
+      if (coverUrl != null && !coverUrl.isBlank()) {
+        out.put(game.id, coverUrl);
+      }
+    }
+    return out;
+  }
+
+  private static List<MarketingHeroTile> buildMarketingRow(
+      long[] ids,
+      String[] titles,
+      String[] fallbackClasses,
+      String[] platforms,
+      Map<Long, String> coverById) {
+    List<MarketingHeroTile> out = new ArrayList<>();
+    for (int i = 0; i < ids.length; i++) {
+      long id = ids[i];
+      String platformLabel = platforms != null && i < platforms.length ? platforms[i] : null;
+      out.add(
+          new MarketingHeroTile(
+              titles[i],
+              String.valueOf(id),
+              coverById.get(id),
+              fallbackClasses[i],
+              platformLabel,
+              platformClassFor(platformLabel)));
+    }
+    return List.copyOf(out);
+  }
+
+  private static String platformClassFor(String platformLabel) {
+    if (platformLabel == null || platformLabel.isBlank()) {
+      return "home-hero-preview-platform--pc";
+    }
+    String p = platformLabel.trim().toLowerCase(Locale.ROOT);
+    if (p.startsWith("switch")) {
+      return "home-hero-preview-platform--nin";
+    }
+    if (p.startsWith("xbox")) {
+      return "home-hero-preview-platform--xb";
+    }
+    if (p.startsWith("ps")) {
+      return "home-hero-preview-platform--ps";
+    }
+    return "home-hero-preview-platform--pc";
   }
 
   private static boolean isLoggedIn(Authentication authentication) {
@@ -512,4 +645,12 @@ public class HomeController {
     }
     return out;
   }
+
+  public record MarketingHeroTile(
+      String title,
+      String apiId,
+      String coverImageUrl,
+      String fallbackClass,
+      String platformLabel,
+      String platformClass) {}
 }

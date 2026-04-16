@@ -462,21 +462,16 @@
                             </li>
                         </ol>
                         <figure class="hw-media">
-                            <div class="hw-browser" aria-hidden="true">
-                                <span class="hw-browser-dot"></span>
-                                <span class="hw-browser-dot"></span>
-                                <span class="hw-browser-dot"></span>
-                                <span class="hw-browser-url">gamevaultr / collection</span>
-                            </div>
                             <div class="hw-shot">
-                                
-                                <div class="hw-shot-ph" role="img"
-                                    aria-label="Placeholder for collection screenshot">
-                                    <i class="fa-solid fa-layer-group hw-shot-ico" aria-hidden="true"></i>
-                                    <span class="hw-shot-lbl">Collection</span>
-                                    <span class="hw-shot-hint">Screenshot placeholder — replace with your
-                                        capture</span>
-                                </div>
+                                <img
+                                    class="hw-shot-img"
+                                    th:src="@{/images/home-screenshot.png}"
+                                    width="1600"
+                                    height="1000"
+                                    loading="lazy"
+                                    decoding="async"
+                                    alt="Gamevaultr home — collection overview for signed-in players"
+                                />
                             </div>
                         </figure>
                     </div>
