@@ -15,22 +15,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class IgdbService {
 
   private static final Logger logger = LoggerFactory.getLogger(IgdbService.class);
 
-  private static final String IGDB_API_BASE_URL = "https://api.igdb.com/v4";
   private static final String IGDB_GAMES_PATH = "/games";
   private static final String IGDB_POPULARITY_PRIMITIVES_PATH = "/popularity_primitives";
 
@@ -42,18 +33,15 @@ public class IgdbService {
 
   private static final String GAME_LIST_FIELDS_WITH_SUMMARY = GAME_LIST_FIELDS + ",summary";
 
-  private static final int IGDB_RETRY_COUNT = 3;
-  private static final long IGDB_RETRY_PAUSE_MS = 400L;
   private static final int POPULARITY_TYPE_PLAYING = 3;
   private static final int POPULARITY_TYPE_PLAYED = 4;
   private static final double POP_WEIGHT_PLAYING = 0.5d;
   private static final double POP_WEIGHT_PLAYED = 0.5d;
 
-  private final IgdbTokenService tokenService;
-  private final RestTemplate restTemplate = new RestTemplate();
+  private final IgdbClient igdbClient;
 
-  public IgdbService(IgdbTokenService tokenService) {
-    this.tokenService = tokenService;
+  public IgdbService(IgdbClient igdbClient) {
+    this.igdbClient = igdbClient;
   }
 
   public List<Map<String, Object>> searchGames(
@@ -78,7 +66,7 @@ public class IgdbService {
 
     logger.info(
         "IGDB search request (Postman): POST {} body: {}",
-        IGDB_API_BASE_URL + IGDB_GAMES_PATH,
+        "/v4" + IGDB_GAMES_PATH,
         body);
 
     List<Map<String, Object>> response = postIgdbQuery(IGDB_GAMES_PATH, body);
@@ -243,57 +231,8 @@ public class IgdbService {
     return result;
   }
 
-  private HttpHeaders buildIgdbHeaders() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Client-ID", tokenService.getClientId());
-    headers.set("Authorization", "Bearer " + tokenService.getAccessToken());
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    return headers;
-  }
-
   private List<Map<String, Object>> postIgdbQuery(String igdbPath, String body) {
-    String fullUrl = IGDB_API_BASE_URL + igdbPath;
-    Exception lastError = null;
-
-    for (int attempt = 1; attempt <= IGDB_RETRY_COUNT; attempt++) {
-      try {
-        HttpEntity<String> entity = new HttpEntity<>(body, buildIgdbHeaders());
-        ResponseEntity<List<Map<String, Object>>> response =
-            restTemplate.exchange(
-                fullUrl,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<List<Map<String, Object>>>() {});
-        List<Map<String, Object>> responseBody = response.getBody();
-        return responseBody != null ? responseBody : Collections.emptyList();
-      } catch (Exception e) {
-        lastError = e;
-        logger.warn(
-            "IGDB request failed (try {}/{}): {} — {}",
-            attempt,
-            IGDB_RETRY_COUNT,
-            fullUrl,
-            e.toString());
-        if (e instanceof HttpClientErrorException h && h.getStatusCode().value() == 401) {
-          tokenService.invalidateAccessToken();
-        }
-        if (attempt < IGDB_RETRY_COUNT) {
-          sleepQuiet(IGDB_RETRY_PAUSE_MS * attempt);
-        }
-      }
-    }
-
-    logger.error("IGDB still failing after {} tries: {}", IGDB_RETRY_COUNT, fullUrl, lastError);
-    throw new IgdbException(lastError);
-  }
-
-  private static void sleepQuiet(long ms) {
-    try {
-      Thread.sleep(ms);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IgdbException(e);
-    }
+    return igdbClient.postQuery(igdbPath, body);
   }
 
   private Set<Integer> mapPlatformNamesToIds(Set<String> platformNames) {
